@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Cafeteria Ordering System</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    color: #1a1a2e;
+  }
+
+  header {
+    background: #0d2137;
+    color: white;
+    padding: 16px 30px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p  { font-size: 12px; opacity: 0.5; margin-top: 2px; }
+
+  .container {
+    max-width: 920px;
+    margin: 24px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .section-title span {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    margin-left: 6px;
+    font-family: monospace;
+  }
+
+  /* Menu Grid */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .menu-item {
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .menu-item:hover { border-color: #7dd3fc; background: #f0f9ff; }
+  .menu-item.selected {
+    border-color: #0d9488;
+    background: #f0fdfa;
+  }
+
+  .item-num  { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+  .item-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .item-price { font-size: 13px; color: #6b7280; }
+
+  .qty-controls {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .menu-item.selected .qty-controls { display: flex; }
+
+  .qty-btn {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #374151;
+    transition: all 0.1s;
+  }
+  .qty-btn:hover { border-color: #0d9488; color: #0d9488; }
+  .qty-num { font-size: 15px; font-weight: 700; min-width: 18px; text-align: center; }
+
+  /* Right side */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .order-list { min-height: 60px; }
+
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 9px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+  }
+  .order-row:last-child { border-bottom: none; }
+  .order-item-name { font-weight: 600; }
+  .order-item-sub  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .order-item-total { font-weight: 700; color: #0d2137; }
+
+  .empty-note {
+    font-size: 13px;
+    color: #9ca3af;
+    text-align: center;
+    padding: 12px 0;
+  }
+
+  /* Bill section */
+  .bill-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #6b7280;
+    padding: 4px 0;
+  }
+  .bill-line.discount-line { color: #16a34a; font-weight: 500; display: none; }
+  .bill-line.total-line {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0d2137;
+    border-top: 2px solid #e5e7eb;
+    margin-top: 8px;
+    padding-top: 10px;
+  }
+
+  .discount-badge {
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .btn-order {
+    width: 100%;
+    padding: 13px;
+    background: #0d2137;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.15s;
+  }
+  .btn-order:hover:not(:disabled) { background: #1e3a8a; }
+  .btn-order:disabled { background: #d1d5db; cursor: not-allowed; }
+
+  .btn-reset {
+    width: 100%;
+    padding: 9px;
+    background: white;
+    color: #9ca3af;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { border-color: #ef4444; color: #ef4444; }
+
+  .success-box {
+    display: none;
+    background: #f0fdf4;
+    border: 2px solid #86efac;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .success-box h3 { color: #15803d; font-size: 16px; margin-bottom: 4px; }
+  .success-box p  { color: #6b7280; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🍽️ Smart Cafeteria Ordering System</h1>
+    <p>OOP Project — PAK Austria Fachhochschule</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEFT: MENU -->
+  <div class="card">
+    <div class="section-title">Menu <span>MenuItem</span></div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <div class="card">
+      <div class="section-title">Your Order <span>Order</span></div>
+      <div class="order-list">
+        <div class="empty-note" id="emptyNote">No items selected yet</div>
+        <div id="orderRows"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Bill <span>Billing</span></div>
+      <div class="discount-badge" id="discBadge">🎉 10% Discount Applied — Total above Rs. 1000!</div>
+      <div class="bill-line"><span>Subtotal</span><span id="subTotal">Rs. 0</span></div>
+      <div class="bill-line discount-line" id="discLine"><span>Discount (10%)</span><span id="discAmt">−Rs. 0</span></div>
+      <div class="bill-line total-line"><span>Total</span><span id="finalTotal">Rs. 0</span></div>
+
+      <button class="btn-order" id="placeBtn" disabled onclick="placeOrder()">Place Order</button>
+      <button class="btn-reset" onclick="resetAll()">Clear</button>
+
+      <div class="success-box" id="successBox">
+        <h3>✅ Order Placed!</h3>
+        <p>Your food is being prepared. Enjoy!</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+  var menuItems = [
+    { id: 1, name: "Burger", price: 250 },
+    { id: 2, name: "Pizza",  price: 500 },
+    { id: 3, name: "Fries",  price: 150 },
+    { id: 4, name: "Drink",  price: 100 },
+  ];
+
+  var orderQty = {};
+
+  function buildMenu() {
+    var grid = document.getElementById('menuGrid');
+    menuItems.forEach(function(item) {
+      var div = document.createElement('div');
+      div.className = 'menu-item';
+      div.id = 'card-' + item.id;
+      div.innerHTML =
+        '<div class="item-num">Item #' + item.id + '</div>' +
+        '<div class="item-name">' + item.name + '</div>' +
+        '<div class="item-price">Rs. ' + item.price + '</div>' +
+        '<div class="qty-controls">' +
+          '<button class="qty-btn" onclick="changeQty(' + item.id + ',-1,event)">−</button>' +
+          '<span class="qty-num" id="q' + item.id + '">1</span>' +
+          '<button class="qty-btn" onclick="changeQty(' + item.id + ',+1,event)">+</button>' +
+        '</div>';
+      div.onclick = function() { toggleItem(item.id); };
+      grid.appendChild(div);
+    });
+  }
+
+  function toggleItem(id) {
+    var card = document.getElementById('card-' + id);
+    if (orderQty[id]) {
+      delete orderQty[id];
+      card.classList.remove('selected');
+    } else {
+      orderQty[id] = 1;
+      card.classList.add('selected');
+    }
+    updateScreen();
+  }
+
+  function changeQty(id, delta, event) {
+    event.stopPropagation();
+    if (!orderQty[id]) return;
+    var newQty = orderQty[id] + delta;
+    if (newQty < 1) newQty = 1;
+    orderQty[id] = newQty;
+    document.getElementById('q' + id).textContent = newQty;
+    updateScreen();
+  }
+
+  function calculateBill() {
+    var subtotal = 0;
+    menuItems.forEach(function(item) {
+      if (orderQty[item.id]) {
+        subtotal += item.price * orderQty[item.id];
+      }
+    });
+
+    var discount = 0;
+    if (subtotal > 1000) {
+      discount = subtotal * 0.10;
+    }
+
+    return {
+      subtotal: subtotal,
+      discount: discount,
+      total: subtotal - discount
+    };
+  }
+
+  function updateScreen() {
+    var hasItems = Object.keys(orderQty).length > 0;
+
+    document.getElementById('emptyNote').style.display = hasItems ? 'none' : 'block';
+
+    var rows = document.getElementById('orderRows');
+    rows.innerHTML = '';
+    menuItems.forEach(function(item) {
+      if (orderQty[item.id]) {
+        var qty   = orderQty[item.id];
+        var total = item.price * qty;
+        var row   = document.createElement('div');
+        row.className = 'order-row';
+        row.innerHTML =
+          '<div>' +
+            '<div class="order-item-name">' + item.name + '</div>' +
+            '<div class="order-item-sub">' + qty + ' × Rs. ' + item.price + '</div>' +
+          '</div>' +
+          '<div class="order-item-total">Rs. ' + total + '</div>';
+        rows.appendChild(row);
+      }
+    });
+
+    var bill = calculateBill();
+    document.getElementById('subTotal').textContent   = 'Rs. ' + bill.subtotal;
+    document.getElementById('discAmt').textContent    = '−Rs. ' + Math.round(bill.discount);
+    document.getElementById('finalTotal').textContent = 'Rs. ' + Math.round(bill.total);
+
+    var showDisc = bill.discount > 0;
+    document.getElementById('discLine').style.display  = showDisc ? 'flex' : 'none';
+    document.getElementById('discBadge').style.display = showDisc ? 'block' : 'none';
+
+    document.getElementById('placeBtn').disabled = !hasItems;
+  }
+
+  function placeOrder() {
+    document.getElementById('successBox').style.display = 'block';
+    document.getElementById('placeBtn').style.display   = 'none';
+  }
+
+  function resetAll() {
+    orderQty = {};
+    document.querySelectorAll('.menu-item').forEach(function(c) { c.classList.remove('selected'); });
+    document.querySelectorAll('[id^="q"]').forEach(function(el) { el.textContent = '1'; });
+    document.getElementById('successBox').style.display = 'none';
+    document.getElementById('placeBtn').style.display   = 'block';
+    updateScreen();
+  }
+
+  buildMenu();
+  updateScreen();
+
+</script>
+</body>
+</html>
